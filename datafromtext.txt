@@ -1,0 +1,83 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ST_d3eb5fbec9d84d0e8336502bc6b6e3d8
+{
+    class texttodatatable
+    {
+        public  DataTable ImportDataFromCSVFile(string filePath,string textdelimeter)
+        {
+            DataTable dataTable = new DataTable();
+            try
+            {
+                using (StreamReader readFile = new StreamReader(filePath))
+                {
+                    string line;
+                    StringBuilder sb = new StringBuilder();
+                    string[] row;
+                    int counter = 0;
+                    int length = 0;
+                    while ((line = readFile.ReadLine()) != null)
+                    {
+                        row = line.Split(char.Parse(textdelimeter));
+
+                        if (counter == 0)
+                        {
+                            length = row.Length;
+                            DataRow dr1 = dataTable.NewRow();
+                            for (int i = 0; i < length; i++)
+                            {
+                                try
+                                {
+                                    //dataTable.Columns.Add("Col_" + i.ToString());
+                                    dataTable.Columns.Add(Convert.ToString(row[i]));
+
+                                }
+                                catch (Exception)
+                                {
+
+                                }
+                            }
+                            //  dataTable.Rows.Add(dr1);
+                        }
+                        else
+                        {
+                            if (row.Length == dataTable.Columns.Count)
+                            {
+                                DataRow dr = dataTable.NewRow();
+                                for (int i = 0; i < length; i++)
+                                {
+                                    if (row[i].ToString().Contains('"'))
+                                    {
+                                        row[i] = row[i].Replace('"', ' ');
+                                    }
+                                    dr[i] = Convert.ToString(row[i]);
+                                }
+
+                                dataTable.Rows.Add(dr);
+
+                            }
+                            else
+                            {
+
+                            }
+                        }
+
+                        counter++;
+                    }
+                }
+            }
+            catch (Exception )
+            {
+
+            }
+
+            return dataTable;
+        }
+    }
+}
