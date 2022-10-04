@@ -1,0 +1,88 @@
+Moving data From azure to snowflake
+
+---creation of raw_json_1 table:
+
+create or replace table raw_json_1 (CapID varchar,
+RowID    varchar(50),
+Brand    varchar(50),
+CFBFV    varchar(50),
+ColorGroup    varchar(50),
+Description    varchar(500),
+ECLandedCost    varchar(500),
+ECPOEPercent    float,
+Fabric    varchar(500),
+PODNotes    varchar(500),
+MaterialNo    varchar(500),
+ccCapID    Integer,
+ccRowID    Integer,
+Price    float,
+LBUID    varchar(50),
+CreatedDateTime   varchar(50));
+
+---creation of raw_json_2 table:
+
+create or replace table raw_json_2(CapID varchar,
+RowID    varchar(50),
+Brand    varchar(50),
+CFBFV    varchar(50),
+ColorGroup    varchar(50),
+Description    varchar(500),
+ECLandedCost    varchar(500),
+ECPOEPercent    float,
+Fabric    varchar(500),
+PODNotes    varchar(500),
+MaterialNo    varchar(500),
+ccCapID    Integer,
+ccRowID    Integer,
+Price    float,
+LBUID    varchar(50),
+CreatedDateTime   varchar(50));
+
+-- procedure to copy data from azure to snowflake
+-- to insert the data into stage table
+-- and from the stage table to two raw tables
+
+create or replace procedure sp_promotion_copystage(FILE_NAME VARCHAR,FILE_FORMAT VARCHAR)
+returns string
+language javascript
+as
+$$
+
+var copystatement = snowflake.execute({sqlText: `copy into "DEMO"."PUBLIC"."DESTINATION_TABLE" from @jsonstage pattern = '.*`+FILE_NAME+`.*[.]`+FILE_FORMAT+`' on_error = 'CONTINUE'`});
+copystatement.next();
+var rows_inserted = copystatement.getColumnValue(1);
+ if (rows_inserted != "Copy executed with 0 files processed.")
+    {
+    rows_parsed =  copystatement.getColumnValue("rows_parsed");
+    snowflake.execute({sqlText: `INSERT INTO "DEMO"."PUBLIC"."SOURCE_JSON_STAGE"
+select diff_items:CapID,
+diff_items:RowID,
+diff_items:Brand,    
+diff_items:CFBFV,
+diff_items:ColorGroup,
+diff_items:Description,                                 
+diff_items:ECLandedCost, 
+diff_items:ECPOEPercent,
+diff_items:Fabric,
+diff_items:PODNotes, 
+diff_items:MaterialNo,
+diff_items:ccCapID,
+diff_items:ccRowID,
+diff_items:Price,
+diff_items:LBUID,
+diff_items:CreatedDateTime
+from 
+"DEMO"."PUBLIC"."DESTINATION_TABLE"`
+ });
+ var insert_1 = snowflake.execute({sqlText: `INSERT into "DEMO"."PUBLIC"."RAW_JSON_1"
+select ltrim(split_part(CAPID, ',', 1),'[') as CAPID1,  ltrim(split_part(ROWID, ',', 1),'[') as ROWID1, Brand, CFBFV,ColorGroup,Description,ECLandedCost,ECPOEPercent,Fabric,PODNotes,MaterialNo,ccCapID,ccRowID,Price,LBUID,CreatedDateTime from "DEMO"."PUBLIC"."SOURCE_JSON_STAGE"`});
+insert_1.next();
+ var insert_2 = snowflake.execute({sqlText: ` INSERT into "DEMO"."PUBLIC"."RAW_JSON_2"
+select rtrim(split_part(CAPID, ',', 2),']') as CAPID1,  rtrim(split_part(ROWID, ',', 2),']') as ROWID1, Brand, CFBFV,ColorGroup,Description,ECLandedCost,ECPOEPercent,Fabric,PODNotes,MaterialNo,ccCapID,ccRowID,Price,LBUID,CreatedDateTime from "DEMO"."PUBLIC"."SOURCE_JSON_STAGE"`});
+
+}
+    return "success";
+   
+$$;
+
+call SP_PROMOTION_COPYSTAGE('b','json');

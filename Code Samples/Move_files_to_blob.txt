@@ -1,0 +1,55 @@
+using Azure.Storage.Blobs;
+using Microsoft.Azure.WebJobs;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace AzureTask
+{
+
+    class Program
+    {
+        public static string Connectionstring = ConfigurationManager.ConnectionStrings["connectionstring"].ConnectionString;
+        public static string Directory = ConfigurationManager.AppSettings["directory"];
+        public static string DirectoryFile = ConfigurationManager.AppSettings["directoryfile"];
+        public static string localFilePath = "D:\\snowflake\\sample_csv\\Customer.csv";
+        public static string strFileName = "Customer";
+
+        static void Main()
+        {
+
+            CloudStorageAccount storageaccount = CloudStorageAccount.Parse(Connectionstring);
+            
+            CloudBlobClient client = storageaccount.CreateCloudBlobClient();
+            CloudBlobContainer container = client.GetContainerReference("trial");
+            container.CreateIfNotExists();
+            Console.WriteLine("Container got created successfully");
+            UploadBlob(container, Directory, DirectoryFile, localFilePath, Connectionstring);
+
+
+        }
+
+        public static void UploadBlob(CloudBlobContainer container, string strDirectoryName, string strFileName, string tempFolderPath, string Connectionstring)
+        {
+            try
+            {
+                CloudBlobDirectory directory = container.GetDirectoryReference(strDirectoryName);
+                CloudBlockBlob blockblob = directory.GetBlockBlobReference(strFileName + ".csv");
+                blockblob.UploadFromFile(tempFolderPath);
+                Console.WriteLine("File has been created successfully");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+        }
+
+    }
+}

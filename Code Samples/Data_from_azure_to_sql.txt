@@ -1,0 +1,74 @@
+using System;
+using System.Data;
+using System.Windows;
+using Microsoft.Data.SqlClient;
+
+namespace sqltest
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            try
+            {
+                SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder();
+                builder.DataSource = "unitedtechnotraining.database.windows.net";
+                builder.UserID = "";
+                builder.Password = "";
+                builder.InitialCatalog = "TrainingDB";
+                using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
+                {
+                    Console.WriteLine("\nCopy data from azure to sql server example:");
+                    Console.WriteLine("=========================================\n");
+                    String sql = "SELECT * FROM customer_2";
+                    var table = new DataTable();
+                    using (SqlCommand command = new SqlCommand(sql, connection))
+                    {
+                        connection.Open();
+                        SqlDataAdapter da = new SqlDataAdapter(command);
+
+                           using (da = new SqlDataAdapter(sql, connection))
+                        {
+                            da.Fill(table);
+                        }
+                        
+                    }
+                    string connetionString = null;
+                    SqlConnection connection_1;
+                    SqlCommand command_1;
+                    string sql_1 = null;
+                    connetionString = "Data Source = DESKTOP-T6FO484; Initial Catalog = AdventureWorksDW;Integrated Security=SSPI;TrustServerCertificate=True";
+                    sql_1 = "Select * from product";
+                    connection_1 = new SqlConnection(connetionString);
+                    connection_1.Open();
+                    command_1 = new SqlCommand(sql_1, connection_1);
+                    using (SqlBulkCopy bulkCopy = new SqlBulkCopy(connection_1))
+                    {
+                        foreach (DataColumn c in table.Columns)
+                            bulkCopy.ColumnMappings.Add(c.ColumnName, c.ColumnName);
+
+                        bulkCopy.DestinationTableName = "dbo.customer";
+                        try
+                        {
+                            bulkCopy.WriteToServer(table);
+                            Console.WriteLine("\n Copy Process Completed");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+                    }
+                    command_1.Dispose();
+                    connection_1.Close();
+
+                }
+
+            }
+            catch (SqlException e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+         
+        }
+    }
+}

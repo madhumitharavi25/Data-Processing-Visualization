@@ -1,0 +1,39 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data.OleDb;
+
+namespace MyProject
+{
+    class Program 
+    {
+        static void Main(string[] args)
+        {
+            Program obj = new Program();
+            obj.exeReader();
+            Console.WriteLine("END");
+        }
+
+        public void exeReader()
+        {
+
+            string connString = "Provider=SQLOLEDB;Data Source = DESKTOP-T6FO484; Initial Catalog = AdventureWorksDW;Integrated Security=SSPI;TrustServerCertificate=True";
+
+            System.Data.OleDb.OleDbConnection oConn = new System.Data.OleDb.OleDbConnection(connString);
+            System.Data.OleDb.OleDbCommand oCmd;
+            System.Data.OleDb.OleDbDataReader oReader;
+            oConn.Open();
+            oCmd = oConn.CreateCommand();
+            oCmd.CommandText = "SELECT count(*) FROM product";
+                oReader = oCmd.ExecuteReader();
+                while (oReader.Read())
+                {
+                Console.WriteLine("{0}", oReader[0]);
+            }
+                oReader.Close();
+            
+            oConn.Close();
+        }
+    }
+}

@@ -1,0 +1,91 @@
+using System;
+using System.Text;
+using System.Data;
+using System.IO;
+using Microsoft.VisualBasic.FileIO;
+
+namespace ReadData
+{
+    class DataConvert
+    {
+        static void Main()
+        {
+            string csv_file_path = @"C:\Users\UTIS150\Desktop\Customer.csv";
+            CsvToDataTable obj = new CsvToDataTable();
+
+            DataTable csvData = GetDataTabletFromCSVFile(csv_file_path);
+
+            Console.WriteLine("Rows count:" + csvData.Rows.Count);
+            obj.ShowData(csvData);
+
+            Console.ReadLine();
+        }
+
+       
+
+            private static DataTable GetDataTabletFromCSVFile(string csv_file_path)
+            {
+                DataTable csvData = new DataTable();
+
+
+                using (TextFieldParser csvReader = new TextFieldParser(csv_file_path))
+                {
+                    csvReader.SetDelimiters(new string[] { "," });
+                    csvReader.HasFieldsEnclosedInQuotes = true;
+                    string[] colFields = csvReader.ReadFields();
+                    foreach (string column in colFields)
+                    {
+                        DataColumn datecolumn = new DataColumn(column);
+                        datecolumn.AllowDBNull = true;
+                        csvData.Columns.Add(datecolumn);
+                    }
+
+                    while (!csvReader.EndOfData)
+                    {
+                        string[] fieldData = csvReader.ReadFields();
+                        //Making empty value as null
+                        for (int i = 0; i < fieldData.Length; i++)
+                        {
+                            if (fieldData[i] == "")
+                            {
+                                fieldData[i] = null;
+                            }
+                        }
+                        csvData.Rows.Add(fieldData);
+                    }
+                }
+
+
+                return csvData;
+            }
+        class CsvToDataTable
+        {
+
+            public void ShowData(DataTable csvData)
+            {
+                Console.WriteLine("\n-----------------------------------------------");
+                if (csvData != null && csvData.Rows.Count > 0)
+                {
+                    foreach (DataColumn dc in csvData.Columns)
+                    {
+                        Console.Write(dc.ColumnName + " ");
+                    }
+                    Console.WriteLine("\n-----------------------------------------------");
+
+                    foreach (DataRow dr in csvData.Rows)
+                    {
+                        foreach (var item in dr.ItemArray)
+                        {
+                            Console.Write(item.ToString() + "      ");
+                        }
+                        Console.Write("\n");
+                    }
+                    Console.ReadKey();
+
+
+                }
+            }
+
+        }
+    }
+}

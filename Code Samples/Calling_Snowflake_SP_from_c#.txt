@@ -1,0 +1,42 @@
+using Microsoft.Azure.WebJobs;
+using System;
+using Snowflake.Data.Client;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace WebJob1
+{
+    // To learn more about Microsoft Azure WebJobs SDK, please see https://go.microsoft.com/fwlink/?LinkID=320976
+    class Program
+    {
+        // Please set the following connection strings in app.config for this WebJob to run:
+        // AzureWebJobsDashboard and AzureWebJobsStorage
+        static void Main()
+        {
+            string connectionString = "scheme=https;ACCOUNT=go45509;HOST=go45509.ap-southeast-1.snowflakecomputing.com;port=443; ROLE=accountadmin;WAREHOUSE=COMPUTE_WH; USER=MADHUMITHA; PASSWORD=Techmad@123;DB=DEMO;SCHEMA=Public";
+
+
+            using (var conn = new SnowflakeDbConnection())
+            {
+                conn.ConnectionString = connectionString;
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                Console.WriteLine("-----------");
+                cmd.CommandText = "call SP_PROMOTION_COPYSTAGE('b','json')";
+                var reader = cmd.ExecuteReader();
+                dynamic resultData;
+                while (reader.Read())
+                {
+                    Console.WriteLine(reader.GetString(0));
+                    resultData = reader.GetString(0);
+                }
+                conn.Close();
+            }
+
+
+
+        }
+    }
+}

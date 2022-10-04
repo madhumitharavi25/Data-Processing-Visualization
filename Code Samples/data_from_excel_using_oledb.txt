@@ -1,0 +1,125 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data.OleDb;
+using System.Data;
+using System.IO;
+
+namespace MyProject
+{
+    class Program_1
+    {
+        
+        static void Main(string[] args)
+        {
+            Program_1 obj = new Program_1();
+            obj.ImportCSVData();
+            Console.WriteLine("END");
+          
+        }
+
+        private DataTable ImportCSVData()
+        {
+            OleDbConnection oledbConn = null;
+            DataTable dt = new DataTable();
+
+            try
+            {
+                var fileName = "C:\\Users\\UTIS150\\Downloads\\Book2.xls";
+                string connectionString = "Provider=Microsoft.Jet.OLEDB.4.0;" + "Data Source=" + fileName + "; Extended Properties =\"Excel 8.0; HDR=YES;IMEX=1;MAXSCANROWS=0;\"";
+              
+                oledbConn = new OleDbConnection(connectionString);
+                
+                String sql = @"SELECT * FROM [Sheet1$]";
+                
+                
+
+                using (var cmd = new OleDbCommand(sql, oledbConn))
+                {
+                    oledbConn.Open();
+
+
+                    OleDbDataAdapter obj_oledb_da = new OleDbDataAdapter(sql, oledbConn);
+
+                    using (obj_oledb_da = new OleDbDataAdapter(sql, oledbConn))
+                    {
+
+                        obj_oledb_da.Fill(dt);
+                        {
+                            foreach (DataColumn dc in dt.Columns)
+                            {
+                                Console.Write(dc.ColumnName + " ");
+                            }
+                            Console.WriteLine("\n-----------------------------------------------");
+
+                            foreach (DataRow dr in dt.Rows)
+                            {
+                                foreach (var item in dr.ItemArray)
+                                {
+                                    Console.Write(item.ToString() + "      ");
+                                }
+                                Console.Write("\n");
+                            }
+                            Console.ReadKey();
+                        }
+
+                        DataTable dtSchema = new DataTable();
+                        obj_oledb_da.FillSchema(dtSchema, SchemaType.Source);
+
+
+                        if (dtSchema != null)
+                            WriteSchema(dtSchema);
+                    }
+
+                 
+                }
+
+               
+              
+
+            }
+            finally
+            {
+                if (oledbConn.State == System.Data.ConnectionState.Open)
+                    oledbConn.Close();
+            }
+            return dt;
+        }
+        private void WriteSchema(DataTable dt)
+        {
+            try
+            {
+                FileStream fsOutput = new FileStream("C:\\Users\\UTIS150\\Downloads" + "\\schema.ini", FileMode.Create, FileAccess.Write);
+                StreamWriter srOutput = new StreamWriter(fsOutput);
+                string s1, s2, s3, s4, s5;
+                s1 = "[" + "Book2.csv" + "]";
+                s2 = "ColNameHeader=True";
+                s3 = "Format=CSVDelimited";
+                s4 = "MaxScanRows=0";
+                s5 = "CharacterSet=ANSI";
+                srOutput.WriteLine(s1 + '\n' + s2 + '\n' + s3 + '\n' + s4 + '\n' + s5);
+                StringBuilder strB = new StringBuilder();
+                if (dt != null)
+                {
+                    for (Int32 ColIndex = 1; ColIndex <= dt.Columns.Count; ColIndex++)
+                    {
+                        strB.Append("Col" + ColIndex.ToString());
+                        strB.Append("=F" + ColIndex.ToString());
+                        strB.Append(" Text\n");
+                        srOutput.WriteLine(strB.ToString());
+                        strB = new StringBuilder();
+                    }
+                }
+
+
+                srOutput.Close();
+                fsOutput.Close();
+            }
+            catch (Exception ex)
+            {
+               Console.WriteLine(ex);
+            }
+        }
+    }
+}
